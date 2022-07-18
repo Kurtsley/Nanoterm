@@ -1,2 +1,2 @@
-# rust_nano_widget_final
+# Nanoterm
 Simple Nano currency tracking widget for use in a terminal.
