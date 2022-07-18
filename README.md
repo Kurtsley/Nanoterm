@@ -1,6 +1,7 @@
 # Nanoterm
 
-Simple Nano currency tracking widget that updates every 5 minutes.
+Simple Nano currency tracking widget that updates every 5 minutes.  
+Designed to run in a small terminal window.
 
 ## Installation
 
