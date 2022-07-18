@@ -16,11 +16,16 @@ use tui_image::Image;
 fn ui<B: Backend>(f: &mut Frame<B>) {
     // Wrapping block for a group
     // Just draw the block and the group on the same area and build the group
-    // with at least a margin of 1
+    // with at least a margin of 1[
+
+    const IMAGE: &[u8] = include_bytes!("../res/xno-light.png");
 
     let size = f.size();
     let data = get_data();
-    let img = image::open("res/xno-light.png").unwrap().to_rgba8();
+    //let img = image::open("res/xno-light.png").unwrap().to_rgba8();
+    let img = image::load_from_memory(IMAGE)
+        .expect("Couldn't load image")
+        .into_rgba8();
 
     // Surrounding block
     let block = Block::default()
@@ -75,12 +80,12 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         Spans::from(""),
         if data.percent_change_24h > 0.0 {
             Spans::from(Span::styled(
-                format!("Daily Change % {:.5}", data.percent_change_24h.to_string()),
+                format!("Daily Change % {:.4}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::Rgb(0, 255, 0)),
             ))
         } else if data.percent_change_24h < 0.0 {
             Spans::from(Span::styled(
-                format!("Daily Change % {:.5}", data.percent_change_24h.to_string()),
+                format!("Daily Change % {:.4}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::Red),
             ))
         } else {
