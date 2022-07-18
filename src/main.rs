@@ -11,22 +11,23 @@ use tui::{
     widgets::{Block, BorderType, Borders, Paragraph},
     Frame, Terminal,
 };
-use tui_image::{ColorMode, Image};
+use tui_image::Image;
 
 fn ui<B: Backend>(f: &mut Frame<B>) {
     // Wrapping block for a group
     // Just draw the block and the group on the same area and build the group
     // with at least a margin of 1
+
     let size = f.size();
     let data = get_data();
-    let img = image::open("xno-light.png").unwrap().to_rgba8();
+    let img = image::open("res/xno-light.png").unwrap().to_rgba8();
 
     // Surrounding block
     let block = Block::default()
         .borders(Borders::ALL)
         .title(Span::styled(
-            "Nano Tracker by Kurtsley",
-            Style::default().fg(Color::Red).bg(Color::DarkGray),
+            "Nanoterm by Kurtsley",
+            Style::default().fg(Color::Blue),
         ))
         .title_alignment(Alignment::Center)
         .border_type(BorderType::Rounded);
@@ -44,30 +45,58 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
         .split(chunks[0]);
 
-    let block_info = Block::default()
+    let chunk_left = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(35),
+            Constraint::Percentage(30),
+            Constraint::Percentage(35),
+        ])
+        .split(top_chunks[1]);
+
+    let block_info_middle = Block::default();
+
+    let block_blank_top = Block::default();
+    let block_blank_bottom = Block::default();
+
+    let block_info_main = Block::default()
         .title("Info")
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .title_alignment(Alignment::Center);
+    f.render_widget(block_info_main, top_chunks[1]);
 
     let text = vec![
         Spans::from(""),
-        Spans::from(""),
-        Spans::from(""),
-        Spans::from(format!("Price : $ {:.4}", data.price.to_string())),
-        Spans::from(""),
-        Spans::from(""),
-        Spans::from(""),
-        Spans::from(format!(
-            "Daily Change: % {:.5}",
-            data.percent_change_24h.to_string()
+        Spans::from(Span::styled(
+            format!("Price $ {:.4}", data.price.to_string()),
+            Style::default().fg(Color::Yellow),
         )),
+        Spans::from(""),
+        if data.percent_change_24h > 0.0 {
+            Spans::from(Span::styled(
+                format!("Daily Change % {:.5}", data.percent_change_24h.to_string()),
+                Style::default().fg(Color::Rgb(0, 255, 0)),
+            ))
+        } else if data.percent_change_24h < 0.0 {
+            Spans::from(Span::styled(
+                format!("Daily Change % {:.5}", data.percent_change_24h.to_string()),
+                Style::default().fg(Color::Red),
+            ))
+        } else {
+            Spans::from(Span::styled(
+                format!("Daily Change % {:.5}", data.percent_change_24h.to_string()),
+                Style::default().fg(Color::White),
+            ))
+        },
     ];
 
     let text_info = Paragraph::new(text)
-        .block(block_info)
+        .block(block_info_middle)
         .alignment(Alignment::Center);
-    f.render_widget(text_info, top_chunks[1]);
+    f.render_widget(block_blank_top, chunk_left[0]);
+    f.render_widget(text_info, chunk_left[1]);
+    f.render_widget(block_blank_bottom, chunk_left[2]);
 
     let block_logo = Block::default()
         .borders(Borders::ALL)
@@ -77,8 +106,8 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     f.render_widget(logo, top_chunks[0]);
 
     let source = Paragraph::new(Span::styled(
-        "www.github.com/something/tui_test",
-        Style::default().fg(Color::Cyan),
+        "https://github.com/Kurtsley/Nanoterm",
+        Style::default().fg(Color::LightCyan),
     ))
     .alignment(Alignment::Center);
     f.render_widget(source, chunks[1]);
