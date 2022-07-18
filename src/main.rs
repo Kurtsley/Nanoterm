@@ -127,10 +127,8 @@ struct Data {
 }
 
 fn get_data() -> Data {
-    reqwest::blocking::get("https://www.kurtsley.net")
-        .unwrap()
-        .json()
-        .unwrap()
+    let url = "https://www.kurtsley.net";
+    reqwest::blocking::get(url).unwrap().json().unwrap()
 }
 
 fn main() -> Result<(), io::Error> {
