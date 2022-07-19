@@ -2,6 +2,7 @@
 
 use std::io;
 
+use crossterm::{execute, terminal::EnterAlternateScreen};
 use serde::Deserialize;
 use tui::{
     backend::{Backend, CrosstermBackend},
@@ -14,15 +15,17 @@ use tui::{
 use tui_image::Image;
 
 fn ui<B: Backend>(f: &mut Frame<B>) {
-    // Wrapping block for a group
-    // Just draw the block and the group on the same area and build the group
-    // with at least a margin of 1[
-
     const IMAGE: &[u8] = include_bytes!("../res/xno-light.png");
 
     let size = f.size();
+
     let data = get_data();
-    //let img = image::open("res/xno-light.png").unwrap().to_rgba8();
+
+    let data = match data {
+        Ok(data) => data,
+        Err(e) => panic!("Couldn't access kurtsley.net: {:?}", e),
+    };
+
     let img = image::load_from_memory(IMAGE)
         .expect("Couldn't load image")
         .into_rgba8();
@@ -53,9 +56,9 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     let chunk_left = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(35),
-            Constraint::Percentage(30),
-            Constraint::Percentage(35),
+            Constraint::Percentage(25),
+            Constraint::Percentage(50),
+            Constraint::Percentage(25),
         ])
         .split(top_chunks[1]);
 
@@ -74,23 +77,40 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     let text = vec![
         Spans::from(""),
         Spans::from(Span::styled(
-            format!("Price $ {:.4}", data.price.to_string()),
+            format!("Price: ${:.4}", data.price.to_string()),
             Style::default().fg(Color::Yellow),
         )),
         Spans::from(""),
-        if data.percent_change_24h > 0.0 {
+        if data.percent_change_1h > 0.0 {
             Spans::from(Span::styled(
-                format!("Daily Change % {:.4}", data.percent_change_24h.to_string()),
+                format!("Change 1h: %{:.4}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::Rgb(0, 255, 0)),
             ))
-        } else if data.percent_change_24h < 0.0 {
+        } else if data.percent_change_1h < 0.0 {
             Spans::from(Span::styled(
-                format!("Daily Change % {:.4}", data.percent_change_24h.to_string()),
+                format!("Change 1h: %{:.5}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::Red),
             ))
         } else {
             Spans::from(Span::styled(
-                format!("Daily Change % {:.5}", data.percent_change_24h.to_string()),
+                format!("Change 1h: %{:.4}", data.percent_change_1h.to_string()),
+                Style::default().fg(Color::White),
+            ))
+        },
+        Spans::from(""),
+        if data.percent_change_24h > 0.0 {
+            Spans::from(Span::styled(
+                format!("Change 24h: %{:.4}", data.percent_change_24h.to_string()),
+                Style::default().fg(Color::Rgb(0, 255, 0)),
+            ))
+        } else if data.percent_change_24h < 0.0 {
+            Spans::from(Span::styled(
+                format!("Change 24h: %{:.5}", data.percent_change_24h.to_string()),
+                Style::default().fg(Color::Red),
+            ))
+        } else {
+            Spans::from(Span::styled(
+                format!("Change 24h: %{:.4}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::White),
             ))
         },
@@ -110,12 +130,12 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     let logo = Image::with_img(img).block(block_logo);
     f.render_widget(logo, top_chunks[0]);
 
-    let source = Paragraph::new(Span::styled(
-        "https://github.com/Kurtsley/Nanoterm",
+    let credit = Paragraph::new(Span::styled(
+        "made with tui-rs - https://github.com/fdehau/tui-rs",
         Style::default().fg(Color::LightCyan),
     ))
     .alignment(Alignment::Center);
-    f.render_widget(source, chunks[1]);
+    f.render_widget(credit, chunks[1]);
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
@@ -128,19 +148,23 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
 #[derive(Deserialize)]
 struct Data {
     price: f32,
+    percent_change_1h: f32,
     percent_change_24h: f32,
 }
 
-fn get_data() -> Data {
+fn get_data() -> Result<Data, reqwest::Error> {
     let url = "https://www.kurtsley.net";
-    reqwest::blocking::get(url).unwrap().json().unwrap()
+    let res = reqwest::blocking::get(url)?.json::<Data>()?;
+    Ok(res)
 }
 
 fn main() -> Result<(), io::Error> {
-    let stdout = io::stdout();
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
+    terminal.hide_cursor()?;
     run_app(&mut terminal)?;
     Ok(())
 }
