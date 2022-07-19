@@ -2,7 +2,6 @@
 
 use std::io;
 
-use crossterm::{execute, terminal::EnterAlternateScreen};
 use serde::Deserialize;
 use tui::{
     backend::{Backend, CrosstermBackend},
@@ -82,40 +81,41 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     let text = vec![
         Spans::from(""),
         Spans::from(Span::styled(
-            format!("Price: ${:.4}", data.price.to_string()),
+            format!("Price: ${:.5}", data.price.to_string()),
             Style::default().fg(Color::Yellow),
         )),
         Spans::from(""),
+        // Check if positive or negative
         if data.percent_change_1h > 0.0 {
             Spans::from(Span::styled(
-                format!("Change 1h: %{:.4}", data.percent_change_1h.to_string()),
+                format!("Change 1h: %{:.5}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::Rgb(0, 255, 0)),
             ))
         } else if data.percent_change_1h < 0.0 {
             Spans::from(Span::styled(
-                format!("Change 1h: %{:.5}", data.percent_change_1h.to_string()),
+                format!("Change 1h: %{:.6}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::Red),
             ))
         } else {
             Spans::from(Span::styled(
-                format!("Change 1h: %{:.4}", data.percent_change_1h.to_string()),
+                format!("Change 1h: %{:.5}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::White),
             ))
         },
         Spans::from(""),
         if data.percent_change_24h > 0.0 {
             Spans::from(Span::styled(
-                format!("Change 24h: %{:.4}", data.percent_change_24h.to_string()),
+                format!("Change 24h: %{:.5}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::Rgb(0, 255, 0)),
             ))
         } else if data.percent_change_24h < 0.0 {
             Spans::from(Span::styled(
-                format!("Change 24h: %{:.5}", data.percent_change_24h.to_string()),
+                format!("Change 24h: %{:.6}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::Red),
             ))
         } else {
             Spans::from(Span::styled(
-                format!("Change 24h: %{:.4}", data.percent_change_24h.to_string()),
+                format!("Change 24h: %{:.5}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::White),
             ))
         },
@@ -166,8 +166,7 @@ fn get_data() -> Result<Data, reqwest::Error> {
 }
 
 fn main() -> Result<(), io::Error> {
-    let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen)?;
+    let stdout = io::stdout();
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
