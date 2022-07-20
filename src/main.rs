@@ -1,17 +1,84 @@
 // Brian Beard
 
-use std::io;
-
+use crossterm::{
+    event::{self, Event, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
 use serde::Deserialize;
+use std::{error::Error, io};
+use std::{
+    sync::mpsc,
+    time::{Duration, Instant},
+};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Paragraph},
     Frame, Terminal,
 };
+
 use tui_image::Image;
+
+#[derive(Deserialize)]
+struct Data {
+    price: f32,
+    percent_change_1h: f32,
+    percent_change_24h: f32,
+}
+
+// Query kurtsley.net and return data or error.
+fn get_data() -> Result<Data, reqwest::Error> {
+    let url = "https://www.kurtsley.net";
+    let res = reqwest::blocking::get(url)?.json::<Data>()?;
+    Ok(res)
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    // Run app
+    let tick_rate = Duration::from_secs(5);
+    let res = run_app(&mut terminal, tick_rate);
+
+    // Restore terminal
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen,)?;
+    terminal.show_cursor()?;
+
+    if let Err(err) = res {
+        println!("{:?}", err)
+    }
+
+    Ok(())
+}
+
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> io::Result<()> {
+    let mut last_tick = Instant::now();
+    loop {
+        terminal.draw(|f| ui(f))?;
+
+        let timeout = tick_rate
+            .checked_sub(last_tick.elapsed())
+            .unwrap_or_else(|| Duration::from_secs(0));
+        if event::poll(timeout)? {
+            if let Event::Key(key) = event::read()? {
+                if let KeyCode::Char('q') = key.code {
+                    return Ok(());
+                }
+            }
+        }
+        if last_tick.elapsed() >= tick_rate {
+            last_tick = Instant::now();
+        }
+    }
+}
 
 fn ui<B: Backend>(f: &mut Frame<B>) {
     // Save image
@@ -45,7 +112,7 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(2)
-        .constraints([Constraint::Percentage(90), Constraint::Percentage(10)].as_ref())
+        .constraints([Constraint::Percentage(88), Constraint::Percentage(12)].as_ref())
         .split(f.size());
 
     // Top chunks
@@ -88,34 +155,34 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         // Check if positive or negative
         if data.percent_change_1h > 0.0 {
             Spans::from(Span::styled(
-                format!("Change 1h: %{:.5}", data.percent_change_1h.to_string()),
+                format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::Rgb(0, 255, 0)),
             ))
         } else if data.percent_change_1h < 0.0 {
             Spans::from(Span::styled(
-                format!("Change 1h: %{:.6}", data.percent_change_1h.to_string()),
+                format!("Change 1h: % {:.6}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::Red),
             ))
         } else {
             Spans::from(Span::styled(
-                format!("Change 1h: %{:.5}", data.percent_change_1h.to_string()),
+                format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::White),
             ))
         },
         Spans::from(""),
         if data.percent_change_24h > 0.0 {
             Spans::from(Span::styled(
-                format!("Change 24h: %{:.5}", data.percent_change_24h.to_string()),
+                format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::Rgb(0, 255, 0)),
             ))
         } else if data.percent_change_24h < 0.0 {
             Spans::from(Span::styled(
-                format!("Change 24h: %{:.6}", data.percent_change_24h.to_string()),
+                format!("Change 24h: % {:.6}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::Red),
             ))
         } else {
             Spans::from(Span::styled(
-                format!("Change 24h: %{:.5}", data.percent_change_24h.to_string()),
+                format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::White),
             ))
         },
@@ -133,44 +200,42 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    let logo = Image::with_img(img).block(block_logo);
+    //let logo = Image::with_img(img).block(block_logo);
+
+    let text_logo = vec![
+        Spans::from("##                  ##"),
+        Spans::from("##              ##"),
+        Spans::from("##          ##"),
+        Spans::from("##      ##"),
+        Spans::from("##  ##"),
+        Spans::from("##################"),
+        Spans::from("##  ##"),
+        Spans::from("##################"),
+        Spans::from("##          ##"),
+        Spans::from("##              ##"),
+        Spans::from("##                  ##"),
+    ];
+    let logo = Paragraph::new(text_logo)
+        .block(block_logo)
+        .alignment(Alignment::Center);
     f.render_widget(logo, top_chunks[0]);
 
-    let credit = Paragraph::new(Span::styled(
-        "made with tui-rs - https://github.com/fdehau/tui-rs",
-        Style::default().fg(Color::LightCyan),
-    ))
-    .alignment(Alignment::Center);
-    f.render_widget(credit, chunks[1]);
-}
+    let source_text = vec![
+        Spans::from("press 'q' to exit"),
+        Spans::from(""),
+        Spans::from(Span::styled(
+            "made with tui-rs - https://github.com/fdehau/tui-rs",
+            Style::default().fg(Color::LightCyan),
+        )),
+    ];
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
-    loop {
-        terminal.draw(|f| ui(f))?;
-        std::thread::sleep(std::time::Duration::from_secs(300));
-    }
-}
+    let source = Paragraph::new(source_text).alignment(Alignment::Center);
+    f.render_widget(source, chunks[1]);
 
-#[derive(Deserialize)]
-struct Data {
-    price: f32,
-    percent_change_1h: f32,
-    percent_change_24h: f32,
-}
-
-// Query kurtsley.net and return data or error.
-fn get_data() -> Result<Data, reqwest::Error> {
-    let url = "https://www.kurtsley.net";
-    let res = reqwest::blocking::get(url)?.json::<Data>()?;
-    Ok(res)
-}
-
-fn main() -> Result<(), io::Error> {
-    let stdout = io::stdout();
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
-    terminal.clear()?;
-    terminal.hide_cursor()?;
-    run_app(&mut terminal)?;
-    Ok(())
+    //let credit = Paragraph::new(Span::styled(
+    //    "made with tui-rs - https://github.com/fdehau/tui-rs",
+    //    Style::default().fg(Color::LightCyan),
+    //))
+    //.alignment(Alignment::Center);
+    //f.render_widget(credit, chunks[1]);
 }
