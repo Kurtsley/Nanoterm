@@ -6,14 +6,11 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use serde::Deserialize;
+use std::time::{Duration, Instant};
 use std::{error::Error, io};
-use std::{
-    sync::mpsc,
-    time::{Duration, Instant},
-};
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Style},
     text::{Span, Spans},
     widgets::{Block, BorderType, Borders, Paragraph},
@@ -200,24 +197,24 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
-    //let logo = Image::with_img(img).block(block_logo);
+    let logo = Image::with_img(img).block(block_logo);
 
-    let text_logo = vec![
-        Spans::from("##                  ##"),
-        Spans::from("##              ##"),
-        Spans::from("##          ##"),
-        Spans::from("##      ##"),
-        Spans::from("##  ##"),
-        Spans::from("##################"),
-        Spans::from("##  ##"),
-        Spans::from("##################"),
-        Spans::from("##          ##"),
-        Spans::from("##              ##"),
-        Spans::from("##                  ##"),
-    ];
-    let logo = Paragraph::new(text_logo)
-        .block(block_logo)
-        .alignment(Alignment::Center);
+    //let text_logo = vec![
+    //    Spans::from("##                  ##"),
+    //    Spans::from("##              ##"),
+    //    Spans::from("##          ##"),
+    //    Spans::from("##      ##"),
+    //    Spans::from("##  ##"),
+    //    Spans::from("##################"),
+    //    Spans::from("##  ##"),
+    //    Spans::from("##################"),
+    //    Spans::from("##          ##"),
+    //    Spans::from("##              ##"),
+    //    Spans::from("##                  ##"),
+    //];
+    //let logo = Paragraph::new(logo)
+    //    .block(block_logo)
+    //    .alignment(Alignment::Center);
     f.render_widget(logo, top_chunks[0]);
 
     let source_text = vec![
