@@ -144,6 +144,12 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     // Info text
     let text = vec![
         Spans::from(""),
+        Spans::from(""),
+        Spans::from(""),
+        Spans::from(""),
+        Spans::from(""),
+        Spans::from(""),
+        Spans::from(""),
         Spans::from(Span::styled(
             format!("Price: ${:.5}", data.price.to_string()),
             Style::default().fg(Color::Yellow),
@@ -152,7 +158,7 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         // Check if positive or negative
         if data.percent_change_1h > 0.0 {
             Spans::from(Span::styled(
-                format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
+                format!("Change 1h: % +{:.5}", data.percent_change_1h.to_string()),
                 Style::default().fg(Color::Rgb(0, 255, 0)),
             ))
         } else if data.percent_change_1h < 0.0 {
@@ -169,7 +175,7 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         Spans::from(""),
         if data.percent_change_24h > 0.0 {
             Spans::from(Span::styled(
-                format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
+                format!("Change 24h: % +{:.5}", data.percent_change_24h.to_string()),
                 Style::default().fg(Color::Rgb(0, 255, 0)),
             ))
         } else if data.percent_change_24h < 0.0 {
