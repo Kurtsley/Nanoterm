@@ -77,13 +77,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, tick_rate: Duration) -> io::R
     }
 }
 
+// Center the paragraph vertically in a block
+fn center_vert(height: u16, lines: u16) {}
+
 fn ui<B: Backend>(f: &mut Frame<B>) {
     // Save image
     const IMAGE: &[u8] = include_bytes!("../res/xno-light.png");
 
     let size = f.size();
 
-    let term_area = size.area();
+    let term_height = size.bottom();
 
     let data = get_data();
 
@@ -141,10 +144,153 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .title_alignment(Alignment::Center);
+
+    let info_size = block_info_main.inner(top_chunks[1]);
+
     f.render_widget(block_info_main, top_chunks[1]);
 
-    let text = if term_area > 4000 {
-        // Info text
+    let text = if term_height > 54 {
+        vec![
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(Span::styled(
+                format!("Price: ${:.5}", data.price.to_string()),
+                Style::default().fg(Color::Yellow),
+            )),
+            Spans::from(""),
+            // Check if positive or negative
+            if data.percent_change_1h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % +{:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_1h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.6}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+            Spans::from(""),
+            if data.percent_change_24h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % +{:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_24h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.6}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+        ]
+    } else if term_height > 44 && term_height <= 54 {
+        vec![
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(Span::styled(
+                format!("Price: ${:.5}", data.price.to_string()),
+                Style::default().fg(Color::Yellow),
+            )),
+            Spans::from(""),
+            // Check if positive or negative
+            if data.percent_change_1h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % +{:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_1h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.6}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+            Spans::from(""),
+            if data.percent_change_24h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % +{:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_24h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.6}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+        ]
+    } else if term_height > 33 && term_height <= 44 {
+        vec![
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(""),
+            Spans::from(Span::styled(
+                format!("Price: ${:.5}", data.price.to_string()),
+                Style::default().fg(Color::Yellow),
+            )),
+            Spans::from(""),
+            // Check if positive or negative
+            if data.percent_change_1h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % +{:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_1h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.6}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+            Spans::from(""),
+            if data.percent_change_24h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % +{:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_24h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.6}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+        ]
+    } else if term_height > 26 && term_height <= 33 {
         vec![
             Spans::from(""),
             Spans::from(""),
@@ -189,10 +335,98 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
                 ))
             },
         ]
-    } else if term_area > 1600 && term_area < 2000 {
+    } else if term_height >= 26 && term_height <= 30 {
         // Info text
         vec![
             Spans::from(""),
+            Spans::from(""),
+            Spans::from(Span::styled(
+                format!("Price: ${:.5}", data.price.to_string()),
+                Style::default().fg(Color::Yellow),
+            )),
+            Spans::from(""),
+            // Check if positive or negative
+            if data.percent_change_1h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % +{:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_1h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.6}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+            Spans::from(""),
+            if data.percent_change_24h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % +{:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_24h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.6}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+        ]
+    } else if term_height > 23 && term_height <= 26 {
+        // Info text
+        vec![
+            Spans::from(""),
+            Spans::from(Span::styled(
+                format!("Price: ${:.5}", data.price.to_string()),
+                Style::default().fg(Color::Yellow),
+            )),
+            Spans::from(""),
+            // Check if positive or negative
+            if data.percent_change_1h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % +{:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_1h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.6}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+            Spans::from(""),
+            if data.percent_change_24h > 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % +{:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Rgb(0, 255, 0)),
+                ))
+            } else if data.percent_change_24h < 0.0 {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.6}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::Red),
+                ))
+            } else {
+                Spans::from(Span::styled(
+                    format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
+                    Style::default().fg(Color::White),
+                ))
+            },
+        ]
+    } else if term_height >= 20 && term_height <= 23 {
+        // Info text
+        vec![
             Spans::from(Span::styled(
                 format!("Price: ${:.5}", data.price.to_string()),
                 Style::default().fg(Color::Yellow),
@@ -234,47 +468,7 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
             },
         ]
     } else {
-        vec![
-            Spans::from(Span::styled(
-                format!("Price: ${:.5}", data.price.to_string()),
-                Style::default().fg(Color::Yellow),
-            )),
-            Spans::from(""),
-            // Check if positive or negative
-            if data.percent_change_1h > 0.0 {
-                Spans::from(Span::styled(
-                    format!("Change 1h: % +{:.5}", data.percent_change_1h.to_string()),
-                    Style::default().fg(Color::Rgb(0, 255, 0)),
-                ))
-            } else if data.percent_change_1h < 0.0 {
-                Spans::from(Span::styled(
-                    format!("Change 1h: % {:.6}", data.percent_change_1h.to_string()),
-                    Style::default().fg(Color::Red),
-                ))
-            } else {
-                Spans::from(Span::styled(
-                    format!("Change 1h: % {:.5}", data.percent_change_1h.to_string()),
-                    Style::default().fg(Color::White),
-                ))
-            },
-            Spans::from(""),
-            if data.percent_change_24h > 0.0 {
-                Spans::from(Span::styled(
-                    format!("Change 24h: % +{:.5}", data.percent_change_24h.to_string()),
-                    Style::default().fg(Color::Rgb(0, 255, 0)),
-                ))
-            } else if data.percent_change_24h < 0.0 {
-                Spans::from(Span::styled(
-                    format!("Change 24h: % {:.6}", data.percent_change_24h.to_string()),
-                    Style::default().fg(Color::Red),
-                ))
-            } else {
-                Spans::from(Span::styled(
-                    format!("Change 24h: % {:.5}", data.percent_change_24h.to_string()),
-                    Style::default().fg(Color::White),
-                ))
-            },
-        ]
+        vec![Spans::from("Terminal too small!")]
     };
 
     let text_info = Paragraph::new(text)
@@ -286,6 +480,7 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
 
     // Logo
     let block_logo = Block::default()
+        .title(format!("height: {:?}", info_size.height))
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded);
 
