@@ -134,11 +134,10 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         ])
         .split(top_chunks[1]);
 
-    // Info blocks
+    // Info block
     let block_info_middle = Block::default();
-    let block_blank_top = Block::default();
-    let block_blank_bottom = Block::default();
 
+    // Info block main
     let block_info_main = Block::default()
         .title("Info")
         .borders(Borders::ALL)
@@ -149,6 +148,9 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
 
     f.render_widget(block_info_main, top_chunks[1]);
 
+    // If-else statement that determines the size of the block_info_main area
+    // and adds extra Spans::from("") to add space to the beginning of the vec.
+    // TODO Simplify this in the future!!!
     let text = if term_height > 54 {
         vec![
             Spans::from(""),
@@ -474,9 +476,7 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
     let text_info = Paragraph::new(text)
         .block(block_info_middle)
         .alignment(Alignment::Center);
-    f.render_widget(block_blank_top, chunk_left[0]);
     f.render_widget(text_info, chunk_left[1]);
-    f.render_widget(block_blank_bottom, chunk_left[2]);
 
     // Logo
     let block_logo = Block::default()
@@ -486,22 +486,6 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
 
     let logo = Image::with_img(img).block(block_logo);
 
-    //let text_logo = vec![
-    //    Spans::from("##                  ##"),
-    //    Spans::from("##              ##"),
-    //    Spans::from("##          ##"),
-    //    Spans::from("##      ##"),
-    //    Spans::from("##  ##"),
-    //    Spans::from("##################"),
-    //    Spans::from("##  ##"),
-    //    Spans::from("##################"),
-    //    Spans::from("##          ##"),
-    //    Spans::from("##              ##"),
-    //    Spans::from("##                  ##"),
-    //];
-    //let logo = Paragraph::new(logo)
-    //    .block(block_logo)
-    //    .alignment(Alignment::Center);
     f.render_widget(logo, top_chunks[0]);
 
     let source_text = vec![
@@ -515,11 +499,4 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
 
     let source = Paragraph::new(source_text).alignment(Alignment::Center);
     f.render_widget(source, chunks[1]);
-
-    //let credit = Paragraph::new(Span::styled(
-    //    "made with tui-rs - https://github.com/fdehau/tui-rs",
-    //    Style::default().fg(Color::LightCyan),
-    //))
-    //.alignment(Alignment::Center);
-    //f.render_widget(credit, chunks[1]);
 }
